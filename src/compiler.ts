@@ -65,7 +65,6 @@ export class Compiler {
     compile(str:string) {
         if (typeof str !== 'string') throw new Error('Inkling Compiler can only compile from a string');
         if (str.search(/=\s?start/gm) !== 0) {
-            console.log(str.search(/=\s?start/gm));
             throw new Error('Inkling scripts must start with `= start` as the first line');
         }
 
