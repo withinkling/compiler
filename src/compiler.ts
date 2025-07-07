@@ -21,7 +21,7 @@ interface Section {
 }
 
 export class Compiler {
-    getMessageType(text: string): [MessageTypes, string] {
+    #parseMessageType(text: string): [MessageTypes, string] {
         switch(text[0]) {
             case '<':
                 return ['sent', text.slice(1).trim()];
@@ -31,18 +31,17 @@ export class Compiler {
                 return ['received', text.trim()];
         }
     }
-    getMessageLabel(text:string): [string|null, string] {
+    #parseMessageLabel(text:string): [string|null, string] {
         if (text.indexOf(':') === -1) return [null, text];
         return [text.slice(text.indexOf(':') + 1, text.lastIndexOf(':')).trim(), text.slice(text.lastIndexOf(':') + 1).trim()];
     }
-    parseMessage(text:string):[MessageTypes,string|null,string] {
-        const [type, parsedText ] = this.getMessageType(text);
-        const [name, message] = this.getMessageLabel(parsedText);
+    #parseMessage(text:string):[MessageTypes,string|null,string] {
+        const [type, parsedText ] = this.#parseMessageType(text);
+        const [name, message] = this.#parseMessageLabel(parsedText);
 
         return [type, name, message];
     }
-    compileSection(str: string, _i?: number, _arr?: string[]) {
-        console.log(this);
+    #compileSection(str: string, _i?: number, _arr?: string[]) {
         const compiledSections = str.split(/\n/gm).filter(Boolean).reduce((acc: Section, line: string, i) => {
             if (i === 0) {
                 acc.id = line.trim();
@@ -50,7 +49,7 @@ export class Compiler {
                 const [text, destination] = trimMap(line.slice(1).split('->'))
                 acc.options.push({ type: 'option', text, destination });
             } else {
-                const [type, name, message] = this.parseMessage(line)
+                const [type, name, message] = this.#parseMessage(line)
                 acc.messages.push({ type, name, message })
             }
             return acc;
@@ -71,7 +70,7 @@ export class Compiler {
         }
 
         const uncompiledSections = str.split(/^=/gm).filter(Boolean);
-        const compiledSections = trimMap(uncompiledSections, (str) => this.compileSection(str));
+        const compiledSections = trimMap(uncompiledSections, (str) => this.#compileSection(str));
 
         return compiledSections
     }
