@@ -48,7 +48,8 @@ export class Compiler {
             } else if (line[0] === '-') {
                 const [text, destination] = trimMap(line.slice(1).split('->'))
                 acc.options.push({ type: 'option', text, destination });
-            } else {
+            // Treat everything else that isn't a comment as a recevied message
+            } else if (line[0] !== '#') {
                 const [type, name, message] = this.#parseMessage(line)
                 acc.messages.push({ type, name, message })
             }

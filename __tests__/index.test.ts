@@ -161,4 +161,10 @@ Testing`)).toStrictEqual([{ id:'start', messages:[{type:'received',name:null,mes
             options: []
         }])
     })
+
+    it('should ignore comments', () => {
+        expect(C.compile(`= start
+>:test: This is a message
+# This is a comment`)).toStrictEqual([{ id: 'start', messages: [{ type: 'received', message: 'This is a message', name: 'test'}], options: []}])
+    })
 })
