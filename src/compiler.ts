@@ -35,22 +35,40 @@ export class Compiler {
         if (text.indexOf(':') === -1) return [null, text];
         return [text.slice(text.indexOf(':') + 1, text.lastIndexOf(':')).trim(), text.slice(text.lastIndexOf(':') + 1).trim()];
     }
-    #parseMessage(text:string):[MessageTypes,string|null,string] {
+    #interpolateVariables(text:string, data: Record<string, string>) {
+        let output = text;
+        Object.entries(data).forEach(([key, value]) => {
+            output = output.replace(new RegExp(`{${key}}`, 'g'), value)
+        })
+        return output;
+    }
+    #parseMessage(text:string, data: Record<string, string>):[MessageTypes,string|null,string] {
         const [type, parsedText ] = this.#parseMessageType(text);
         const [name, message] = this.#parseMessageLabel(parsedText);
-
-        return [type, name, message];
+        const interpolatedMessage = this.#interpolateVariables(message, data);
+        return [type, name, interpolatedMessage];
+    }
+    #parseVariable(text: string) {
+        const [variableLabel, variableValue] = trimMap(text.slice(1).split('='));
+        return [variableLabel, variableValue]
     }
     #compileSection(str: string, _i?: number, _arr?: string[]) {
+        const Data = {};
         const compiledSections = str.split(/\n/gm).filter(Boolean).reduce((acc: Section, line: string, i) => {
+            // Start
             if (i === 0) {
                 acc.id = line.trim();
+            // Assigning a variable
+            } else if (line[0] === '~') {
+                const [variableName, variableValue] = this.#parseVariable(line);
+                Data[variableName] = variableValue;
+            // Creating an option
             } else if (line[0] === '-') {
                 const [text, destination] = trimMap(line.slice(1).split('->'))
                 acc.options.push({ type: 'option', text, destination });
             // Treat everything else that isn't a comment as a recevied message
             } else if (line[0] !== '#') {
-                const [type, name, message] = this.#parseMessage(line)
+                const [type, name, message] = this.#parseMessage(line, Data)
                 acc.messages.push({ type, name, message })
             }
             return acc;

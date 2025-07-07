@@ -167,4 +167,23 @@ Testing`)).toStrictEqual([{ id:'start', messages:[{type:'received',name:null,mes
 >:test: This is a message
 # This is a comment`)).toStrictEqual([{ id: 'start', messages: [{ type: 'received', message: 'This is a message', name: 'test'}], options: []}])
     })
+
+    it('should interpolate variables into messages', () => {
+        expect(C.compile(`=start
+~ a = 100
+~ name = Jeremiah Blovidious Scrumptious The Third
+> I'm {a} years old and my name is {name}`)).toStrictEqual([
+    {
+        id: 'start',
+        messages: [
+            {
+                message:"I'm 100 years old and my name is Jeremiah Blovidious Scrumptious The Third",
+                name: null,
+                type: "received"
+            }
+        ],
+        options: []
+    }
+])
+    })
 })
