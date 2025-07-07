@@ -2,9 +2,11 @@
   "name": "@withinkling/compiler",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "test":"vitest"
+    "test":"vitest",
+    "build":"vite build"
   },
   "keywords": [],
   "author": "",
