@@ -57,7 +57,7 @@ export class Compiler {
         const [variableLabel, variableValue] = trimMap(text.slice(1).split('='));
         return [variableLabel, variableValue]
     }
-    #compileSection(str: string, _i?: number, _arr?: string[]) {
+    #compileSection(str: string, ownerLabel: string|null) {
         
         const Data = {};
         const compiledSections = str.split(/\n/gm).filter(Boolean).reduce((acc: Section, line: string, i) => {
@@ -77,8 +77,9 @@ export class Compiler {
                 acc.options.push({ type: 'option', text, destination });
             // Treat everything else that isn't a comment as a recevied message
             } else if (line[0] !== '#') {
-                const [type, name, message] = this.#parseMessage(line, Data)
-                acc.messages.push({ type, name, message })
+                const [type, name, message] = this.#parseMessage(line, Data);
+                
+                acc.messages.push({ type, name: type === 'sent' ? ownerLabel : name, message })
             }
             return acc;
         }, {
@@ -106,7 +107,7 @@ export class Compiler {
 
         const uncompiledSections = str.split(/^=/gm).filter(Boolean);
         const ownerLabel = this.#getOwnerLabel(uncompiledSections[0]);
-        const compiledSections = trimMap(uncompiledSections, (str) => this.#compileSection(str));
+        const compiledSections = trimMap(uncompiledSections, (str) => this.#compileSection(str, ownerLabel));
         console.log({ ownerLabel });
         return {
             ownerLabel,
