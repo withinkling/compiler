@@ -23,7 +23,7 @@ const testScriptBadStart = `This is a message
 = aSectionNameWithoutAnySpaces
 >:name: That's hard to hear
 >:name: This shouldn't have a label`
-const testScript = `= start
+const testScript = `= start:Belle:
 This is a message
 > this is another message
 
@@ -60,7 +60,7 @@ describe('Compiler', () => {
 
     it('should handle simple scripts', () => {
         expect(C.compile(`= start
-Testing`)).toStrictEqual([{id:'start',messages:[{type:'received',name:null,message:'Testing'}], options:[]}])
+Testing`).sections).toStrictEqual([{id:'start',messages:[{type:'received',name:null,message:'Testing'}], options:[]}])
     })
 
     it('should handle creating options', () => {
@@ -68,11 +68,11 @@ Testing`)).toStrictEqual([{id:'start',messages:[{type:'received',name:null,messa
 Hello!
 - option -> A
 = A
-Testing`)).toStrictEqual([{ id:'start', messages:[{type:'received',name:null,message:'Hello!'}],options:[{type:'option',destination:'A',text:'option'}]},{id:'A',messages:[{type:'received',message:'Testing',name:null}],options:[]}])
+Testing`).sections).toStrictEqual([{ id:'start', messages:[{type:'received',name:null,message:'Hello!'}],options:[{type:'option',destination:'A',text:'option'}]},{id:'A',messages:[{type:'received',message:'Testing',name:null}],options:[]}])
     });
 
     it('should pass with all features used', () => {
-        expect(C.compile(testScript)).toStrictEqual([{
+        expect(C.compile(testScript).sections).toStrictEqual([{
             id: 'start',
             messages: [
                 {
@@ -163,29 +163,33 @@ Testing`)).toStrictEqual([{ id:'start', messages:[{type:'received',name:null,mes
     })
 
 
-    
+
     it('should ignore comments', () => {
         expect(C.compile(`= start
 >:test: This is a message
-# This is a comment`)).toStrictEqual([{ id: 'start', messages: [{ type: 'received', message: 'This is a message', name: 'test'}], options: []}])
+# This is a comment`).sections).toStrictEqual([{ id: 'start', messages: [{ type: 'received', message: 'This is a message', name: 'test'}], options: []}])
     })
 
     it('should interpolate variables into messages', () => {
         expect(C.compile(`=start
 ~ a = 100
 ~ name = Jeremiah Blovidious Scrumptious The Third
-> I'm {a} years old and my name is {name}`)).toStrictEqual([
-    {
-        id: 'start',
-        messages: [
+> I'm {a} years old and my name is {name}`).sections).toStrictEqual([
             {
-                message:"I'm 100 years old and my name is Jeremiah Blovidious Scrumptious The Third",
-                name: null,
-                type: "received"
+                id: 'start',
+                messages: [
+                    {
+                        message:"I'm 100 years old and my name is Jeremiah Blovidious Scrumptious The Third",
+                        name: null,
+                        type: "received"
+                    }
+                ],
+                options: []
             }
-        ],
-        options: []
-    }
-])
+        ])
+    });
+
+    it('should give an owner label based on the text after the start id', () => {
+        expect(C.compile(`= start:Belle:`).ownerLabel).toBe('Belle')
     })
 })
