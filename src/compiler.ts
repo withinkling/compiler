@@ -1,41 +1,6 @@
-import { trimMap } from "./utils";
-
-interface Option {
-    type: 'option';
-    destination: string;
-    text: string;
-}
-
-type MessageTypes = 'sent'|'received';
-
-interface Message {
-    message: string;
-    type: MessageTypes
-    name: string|null;
-}
-
-interface Section {
-    id: string;
-    messages: Message[];
-    options: Option[];
-}
-
-interface CompileResult {
-    ownerLabel: string|null;
-    sections: Section[]
-}
-
+import { trimMap, parseMessageType } from "./utils";
+import type { MessageTypes, CompileResult, Section } from "./types";
 export class Compiler {
-    #parseMessageType(text: string): [MessageTypes, string] {
-        switch(text[0]) {
-            case '<':
-                return ['sent', text.slice(1).trim()];
-            case '>':
-                return ['received', text.slice(1).trim()];
-            default:
-                return ['received', text.trim()];
-        }
-    }
     #parseMessageLabel(text:string): [string|null, string] {
         if (text.indexOf(':') === -1) return [null, text];
         return [text.slice(text.indexOf(':') + 1, text.lastIndexOf(':')).trim(), text.slice(text.lastIndexOf(':') + 1).trim()];
@@ -48,7 +13,7 @@ export class Compiler {
         return output;
     }
     #parseMessage(text:string, data: Record<string, string>):[MessageTypes,string|null,string] {
-        const [type, parsedText ] = this.#parseMessageType(text);
+        const [type, parsedText ] = parseMessageType(text);
         const [name, message] = this.#parseMessageLabel(parsedText);
         const interpolatedMessage = this.#interpolateVariables(message, data);
         return [type, name, interpolatedMessage];
@@ -74,7 +39,7 @@ export class Compiler {
             // Creating an option
             } else if (line[0] === '-') {
                 const [text, destination] = trimMap(line.slice(1).split('->'))
-                acc.options.push({ type: 'option', text, destination });
+                acc.options.push({ text, destination });
             // Treat everything else that isn't a comment as a recevied message
             } else if (line[0] !== '#') {
                 const [type, name, message] = this.#parseMessage(line, Data);
